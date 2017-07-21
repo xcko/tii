@@ -1,0 +1,26 @@
+.TH TII 1 tii-VERSION
+.SH NAME
+tii \- simple front end to ii
+.SH SYNOPSIS
+.B tii
+.RB [ \-h ]
+.RB [ \-i
+.IR in ]
+.RB [ \-o
+.IR out ]
+.SH DESCRIPTION
+.B tii
+is an extremely small and simple frontend to ii and ii-alike programs.
+It reads from standard input and prints to standard output. By
+default, tii looks for an in file and out file named in and out in
+the current directory.
+.SH OPTIONS
+.TP
+.B \-h
+Prints usage information to stderr, then exits
+.TP
+.BI \-i " in"
+Overrides the default in file (./in)
+.TP
+.BI \-o " out"
+Overrides the default out file (./out)

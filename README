@@ -1,0 +1,21 @@
+tii - tiny ii frontend
+=======================
+tii is a small and simple ii frontend.  It reads commands from
+standard input and prints all channel output to standard output.
+
+tii is built on kevent and kqueue, making it *BSD only.
+
+Installation
+------------
+Edit config.mk to match your local setup. tii is installed into
+/usr/local by default.
+
+Afterwards enter the following command to build and install tii 
+(if necessary as root):
+
+    $ make clean install
+
+
+Running tii
+-----------
+Simply invoke the 'tii' command with the required arguments.

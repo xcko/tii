@@ -29,24 +29,19 @@ int
 main(int argc, char *argv[])
 {
 	struct kevent chlist[2];	/* events to monitor */
-	struct kevent evlist[2];	/* events that were triggered */
-	int kq, nev;
-	int i, ch, in_fd, out_fd;
+	int kq, ch, in_fd, out_fd;
 	char *in_file = NULL, *out_file = NULL;
-	char buf[4096];
-	ssize_t bufl;
+
+	in_file = strdup("./in");
+	out_file = strdup("./out");
 
 	while ((ch = getopt(argc, argv, "i:o:h")) != -1) {
 		switch (ch) {
 		case 'i':
 			in_file = strdup(optarg);
-			if (in_file == NULL)
-				err(1, "strdup");
 			break;
 		case 'o':
 			out_file = strdup(optarg);
-			if (out_file == NULL)
-				err(1, "strdup");
 			break;
 		case 'h':
 		default:
@@ -56,18 +51,13 @@ main(int argc, char *argv[])
 	}
 	if (argc - optind > 0)
 		usage();
+	if ((in_file == NULL) || (out_file == NULL))
+		err(1, "strdup");
 
-	if (in_file == NULL)
-		if ((in_file = strdup("./in")) == NULL)
-			err(1, "strdup");
-	if ((in_fd = open(in_file, O_WRONLY|O_APPEND)) == -1)
-		err(1, "open in_file");
-
-	if (out_file == NULL)
-		if ((out_file = strdup("./out")) == NULL)
-			err(1, "strdup");
-	if ((out_fd = open(out_file, O_RDONLY)) == -1)
-		err(1, "open out_file");
+	in_fd = open(in_file, O_WRONLY|O_APPEND);
+	out_fd = open(out_file, O_RDONLY);
+	if ((in_fd == -1 ) || (out_fd == -1))
+		err(1, "opening in out files");
 
 	free(in_file);
 	free(out_file);
@@ -84,25 +74,34 @@ main(int argc, char *argv[])
 	EV_SET(&chlist[1], STDIN_FILENO, EVFILT_READ, EV_ADD, 0, 0, 0);
 
 	for (;;) {
-		nev = kevent(kq, chlist, 2, evlist, 2, NULL);	/* block indefinitely */
+		int i, nev;
+		struct kevent evlist[2];	/* events that were triggered */
 
+		nev = kevent(kq, chlist, 2, evlist, 2, NULL);	/* block indefinitely */
 		if (nev == -1)
 			err(1, "kevent()");
 
 		for (i = 0; i < nev; i++) {
+			int res = 0;
+			char buf[512];
+			ssize_t bufl;
+
 			if (evlist[i].flags & EV_ERROR)
 				err(1, "evlist EV_ERROR");
 			if (evlist[i].data <= 0)
 				break;	/* we only append */
-			if ((bufl = read(evlist[i].ident, buf, sizeof buf)) == -1)
+
+			bufl = read(evlist[i].ident, buf, sizeof buf);
+			if (bufl == -1 )
 				err(1, "read");
-			if (evlist[i].ident == out_fd) {
-				if ((write(STDOUT_FILENO, buf, bufl)) == -1)
-					err(1, "write");
-			 } else if (evlist[i].ident == STDIN_FILENO) {
-				if ((write(in_fd, buf, bufl)) == -1)
-					err(1, "write");
+
+			if (evlist[i].ident == out_fd) {	/* can't switch-case, out_fd isn't static */
+				res = write(STDOUT_FILENO, buf, bufl);
+			} else if (evlist[i].ident == STDIN_FILENO) {
+				res = write(in_fd, buf, bufl);
 			}
+			if (res == -1)
+				err(1, "write");
 		}
 	}
 	return 0;

@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 	}
 	if (argc - optind > 0)
 		usage();
-	if ((in_file == NULL) || (out_file == NULL))
+	if (in_file == NULL || out_file == NULL)
 		err(1, "strdup");
 
 	in_fd = open(in_file, O_WRONLY|O_APPEND);
